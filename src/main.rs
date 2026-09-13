@@ -161,7 +161,7 @@ async fn main() -> std::io::Result<()> {
             .service(delete)
             .service(search)
     })
-    .bind(("127.0.0.1", 3484))?
+    .bind(("127.0.0.1", 80))?
     .run()
     .await
 }
