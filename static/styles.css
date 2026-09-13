@@ -1,0 +1,105 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  padding: 1rem;
+  margin: auto;
+
+  max-width: 600px;
+  min-height: 100vh;
+
+  display: grid;
+  grid-template:
+    "head" min-content
+    "body" min-content
+    / 1fr;
+}
+
+header {
+  padding-top: 6rem;
+
+  h1 {
+    font-weight: normal;
+    font-size: 1.2rem;
+    color: grey;
+    animation: fadeout 2s forwards ease;
+  }
+}
+
+@keyframes fadeout {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+input#terms {
+  width: 100%;
+  display: block;
+  margin-block: 0.5rem;
+  padding: 0.3rem 0.6rem;
+}
+
+output#matches {
+  ol {
+    list-style: none;
+
+    li {
+      padding: 0.3rem 0.6rem;
+      border-radius: 0.5rem;
+
+      &:first-child {
+        h2 {
+          color: slateblue;
+        }
+      }
+
+      &:hover {
+        background: #eee;
+
+        button {
+          display: block;
+        }
+      }
+
+      display: grid;
+      grid-template: "locator visits" min-content
+      "keywords delete" min-content
+      / 1fr;
+
+      h2 {
+        font-weight: normal;
+        font-size: 1.2rem;
+      }
+
+      p,
+      div.visits {
+        color: grey;
+      }
+
+      div.visits {
+        text-align: right;
+      }
+
+      button {
+        display: none;
+
+        border: none;
+      }
+    }
+  }
+}
