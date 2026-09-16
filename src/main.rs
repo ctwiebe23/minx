@@ -1,9 +1,11 @@
 use actix_web::{
-    App, Error, HttpRequest, HttpResponse, HttpResponseBuilder, HttpServer, Responder, delete, get, rt, web,
+    App, Error, HttpRequest, HttpResponse, HttpResponseBuilder, HttpServer, Responder, delete,
+    dev::ServiceRequest, error::ErrorUnauthorized, get, rt, web,
 };
+use actix_web_httpauth::{extractors::basic::BasicAuth, middleware::HttpAuthentication};
 use actix_ws::Message;
 use futures_util::StreamExt as _;
-use maud::{DOCTYPE, Markup, html, PreEscaped};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 use sqlx::SqlitePool;
 
 fn index_html(title: &str) -> Markup {
@@ -146,6 +148,17 @@ async fn websocket(
     Ok(resp)
 }
 
+async fn login(
+    service_req: ServiceRequest,
+    auth: BasicAuth,
+) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+    if auth.user_id() == "user" && auth.password() == Some("pass") {
+        Ok(service_req)
+    } else {
+        Err((ErrorUnauthorized("login failed"), service_req))
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let db = SqlitePool::connect("sqlite:minx.db")
@@ -154,6 +167,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(HttpAuthentication::basic(login))
             .app_data(web::Data::new(db.clone()))
             .service(index)
             .service(actix_files::Files::new("/static", "./static"))
@@ -161,7 +175,7 @@ async fn main() -> std::io::Result<()> {
             .service(delete)
             .service(search)
     })
-    .bind(("127.0.0.1", 80))?
+    .bind(("127.0.0.1", 3484))?
     .run()
     .await
 }
