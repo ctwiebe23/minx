@@ -24,6 +24,7 @@ pub enum Command {
     Search(Keywords),
     Alter(Locator, Keywords),
     Delete(Locator),
+    Increment(Locator),
 }
 
 #[derive(Debug)]
@@ -33,6 +34,7 @@ pub enum CommandResult {
     Deleted,
     InternalError,
     NothingHappened,
+    Incremented,
 }
 
 pub fn terms_to_keywords(terms: &str) -> Keywords {
@@ -213,6 +215,14 @@ async fn search(keywords: &Keywords, pool: &SqlitePool) -> Result<Option<String>
     }
 }
 
+async fn increment(locator: &Locator, pool: &SqlitePool) -> Result<(), sqlx::Error> {
+    let locator = locator.as_str();
+    let mut conn = pool.acquire().await?;
+    let id = get_locator_id(locator, &mut conn).await?;
+    increment_locator_visits_by_id(id, pool).await?;
+    Ok(())
+}
+
 async fn delete(locator: &Locator, pool: &SqlitePool) -> Result<(), sqlx::Error> {
     let locator = locator.as_str();
     let mut transaction = pool.begin().await?;
@@ -238,8 +248,32 @@ pub async fn dispatch(command: Command, pool: &SqlitePool) -> CommandResult {
             Ok(()) => CommandResult::Deleted,
             Err(_) => CommandResult::InternalError,
         },
+        Command::Increment(locator) => match increment(&locator, &pool).await {
+            Ok(()) => CommandResult::Incremented,
+            Err(_) => CommandResult::InternalError,
+        },
         Command::NoOp => CommandResult::NothingHappened,
     };
+}
+
+fn sort_matches(matches: &mut Vec<LocatorModel>, keywords: &Keywords) {
+    matches.sort_by_key(|m| {
+        let mut mkeywords = m.keywords.split(" ");
+        let perfect_matches = keywords
+            .iter()
+            .filter(|kw| mkeywords.any(|mkw| kw == &mkw))
+            .collect::<Vec<_>>()
+            .len();
+        let unmatched = mkeywords
+            .filter(|mkw| !keywords.iter().any(|kw| mkw.starts_with(kw)))
+            .collect::<Vec<_>>()
+            .len();
+        (
+            -perfect_matches.try_into().unwrap_or(0),
+            unmatched,
+            -m.visits,
+        )
+    });
 }
 
 pub async fn make_matches(keywords: &Keywords, pool: &SqlitePool) -> Markup {
@@ -247,19 +281,23 @@ pub async fn make_matches(keywords: &Keywords, pool: &SqlitePool) -> Markup {
         return html! {};
     }
 
-    if let Ok(matches) = get_locators_by_keywords(keywords, pool, 10).await {
+    if let Ok(mut matches) = get_locators_by_keywords(keywords, pool, 10).await {
         if matches.len() == 0 {
             html! {
                 p { "No matches" }
             }
         } else {
+            sort_matches(&mut matches, keywords);
             html! {
                 ol {
                     @for m in matches {
-                        li _={ "on click go to " (m.content) } {
+                        li _={ "on click fetch '/' + encodeURIComponent('" (m.content) "') with method: 'PUT' then go to " (m.content) } {
                             h2 { (m.content) }
                             div .visits { (m.visits) }
-                            p { (m.keywords) }
+                            p { ({
+                                let url_keywords = terms_to_keywords(&m.content);
+                                m.keywords.split(" ").filter(|k| !url_keywords.contains(k.to_owned())).collect::<Vec<_>>().join(" ")
+                            }) }
                             button _={ "on click trigger delete(locator: '" (m.content) "') then halt the event" } {
                                 "delete"
                             }

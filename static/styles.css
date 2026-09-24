@@ -47,7 +47,7 @@ header {
   }
 }
 
-input#terms {
+input:is(#terms, #decade) {
   width: 100%;
   display: block;
   margin-block: 0.5rem;
