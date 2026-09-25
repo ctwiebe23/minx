@@ -305,6 +305,9 @@ pub async fn make_matches(keywords: &Keywords, pool: &SqlitePool) -> Markup {
                                 let url_keywords = terms_to_keywords(&m.content);
                                 m.keywords.split(" ").filter(|k| !url_keywords.contains(k.to_owned())).collect::<Vec<_>>().join(" ")
                             }) }
+                            button _={ "on click set #terms's value to the previous <h2/>'s innerText + ' ' + the previous <p/>'s innerText then halt the event" } {
+                                "edit"
+                            }
                             button _={ "on click trigger delete(locator: '" (m.content) "') then halt the event" } {
                                 "delete"
                             }
