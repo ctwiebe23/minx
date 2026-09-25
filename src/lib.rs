@@ -259,18 +259,25 @@ pub async fn dispatch(command: Command, pool: &SqlitePool) -> CommandResult {
 fn sort_matches(matches: &mut Vec<LocatorModel>, keywords: &Keywords) {
     matches.sort_by_key(|m| {
         let mut mkeywords = m.keywords.split(" ");
-        let perfect_matches = keywords
+        let perfect_matches: i32 = keywords
             .iter()
             .filter(|kw| mkeywords.any(|mkw| kw == &mkw))
             .collect::<Vec<_>>()
-            .len();
-        let unmatched = mkeywords
-            .filter(|mkw| !keywords.iter().any(|kw| mkw.starts_with(kw)))
-            .collect::<Vec<_>>()
-            .len();
+            .len()
+            .try_into()
+            .unwrap_or(0);
+        let imperfect_matches: i32 =
+            mkeywords.collect::<Vec<_>>().len().try_into().unwrap_or(0) - perfect_matches;
+        let relevence_group = if imperfect_matches < 3 {
+            imperfect_matches
+        } else if imperfect_matches == 3 {
+            2
+        } else {
+            3
+        };
         (
             -perfect_matches.try_into().unwrap_or(0),
-            unmatched,
+            relevence_group,
             -m.visits,
         )
     });
