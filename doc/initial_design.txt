@@ -1,0 +1,100 @@
+= NAME
+
+minx - Searchable bookmarks
+
+= DESCRIPTION
+
+minx is a website that allows the user to search a
+database of links via associated keywords
+
+= ENDPOINTS
+
+GET    /           = index page
+GET    /static/*   = file server
+GET    /<terms...> = search terms
+DELETE /<locator>  = remove entry
+GET    /ws         = websocket for live matches
+
+= SEARCH
+
+search (x:xs)
+  | x is URL     -> create w/ x=locator xs=keywords
+                    visit x
+  | #matches > 0 -> visit top match
+  | #matches = 0 -> return 404
+
+= UI
+
+extremely simple (blank screen until text typed?)
+single autofocus textbox
+display matches as text is entered
+if leading term in textbox is a URL, say so
+
+the whole match is a link to the site
+delete button on hover
+edit button on hover
+
+  protocol://domain/path       #
+  keywords                   e d
+
+visible keywords should not contain the locator
+the domain and path should stand out from the rest
+
+enter -> search
+ctrl+enter -> search in bg tab, notify if edits
+ctrl+e -> "edit" top match (fill textbox w/ entry)
+ctrl+x -> delete top match, notify success
+
+on notify refresh matches
+
+= DATA STRUCTURES
+
+an entry is a URL (locator), keywords, and #visits
+keywords are a set
+keywords are alphanumeric only
+keywords are case-insensitive
+non-alphanumeric characters are whitespace
+keywords are deliminated by whitespace
+URL is treated as keyword during creation
+
+e.g.
+  user-defined URL is https://mozzie.zip/home
+  user-defined keywords are "my home page, yay!"
+  entry is stored as:
+
+    locator = https://mozzie.zip/home
+    keywords =
+      [ "mozzie"
+      , "zip"
+      , "home"
+      , "my"
+      , "page"
+      , "yay"
+      ]
+
+among all entries, URLs are unique
+among all entries, keyword sets are unique
+
+= MATCHES AND SORTING
+
+keyword is matching if it begins with a search term
+an entry is a match if all terms match a keyword
+given keywords, matching entries are sorted by
+  1. #perfect matches
+  2. #non-matching keywords (exp decrease or fib)
+  3. #visits
+
+= AUTHENTICATION
+
+single account, prompts only for password
+uses cookies to remember login
+loginless mode for local networks
+
+= STACK
+
+frontend:
+  _hyperscript
+  vanilla
+backend:
+  sqlite
+  rust with sqlx, actix-web

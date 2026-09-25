@@ -1,0 +1,44 @@
+# NAME
+
+minx - Searchable bookmarks
+
+# SYNOPSIS
+
+    minx [OPTIONS]
+
+# DESCRIPTION
+
+minx is a webserver and UI that allows users to search a database a links via
+associated keywords.
+
+Enter search terms by typing in the textbox, and press enter to navigate to the
+selected page.  Keywords are alphanumeric only and are separated by
+non-alphanumeric characters.  The page URL is automatically tokenized into
+keywords, and so can be searched for directly as well.
+
+Press `<C-x>` to delete the currently selected entry, and press `<C-e>` to
+edit it.
+
+Entries are edited or created by entering a complete URL as the first search
+term, entering associated keywords as the following search terms, and pressing
+enter.
+
+# OPTIONS
+
+`-i, --ip <IP>`
+:   default: 127.0.0.1
+
+`-p, --port <PORT>`
+:   default: 3484
+
+`-o, --openphrase <OPENPHRASE>`
+:   default: uv-5r+plus
+
+`-s, --sqlite-db <SQLITE_DB>`
+:   default: `./minx.db`
+
+`-h, --help`
+:   Print help
+
+`-V, --version`
+:   Print version
