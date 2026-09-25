@@ -157,7 +157,6 @@ async fn alter(
 async fn get_locators_by_keywords(
     keywords: &Keywords,
     pool: &SqlitePool,
-    limit: i64,
 ) -> Result<Vec<LocatorModel>, sqlx::Error> {
     if keywords.len() == 0 {
         return Ok(Vec::new());
@@ -198,16 +197,18 @@ async fn get_locators_by_keywords(
         join locator_keyword j on l.id = j.locator_id
         join keyword k on k.id = j.keyword_id
         group by l.id
-        limit 
         "#,
     );
-    query.push_bind(limit);
 
-    query.build_query_as::<LocatorModel>().fetch_all(pool).await
+    let mut matches = query.build_query_as::<LocatorModel>().fetch_all(pool).await;
+    if matches.is_ok() {
+        sort_matches(matches.as_mut().unwrap(), keywords);
+    }
+    matches
 }
 
 async fn search(keywords: &Keywords, pool: &SqlitePool) -> Result<Option<String>, sqlx::Error> {
-    if let Some(locator) = get_locators_by_keywords(keywords, pool, 1).await?.get(0) {
+    if let Some(locator) = get_locators_by_keywords(keywords, pool).await?.get(0) {
         increment_locator_visits_by_id(locator.id, pool).await?;
         Ok(Some(locator.content.clone()))
     } else {
@@ -288,13 +289,12 @@ pub async fn make_matches(keywords: &Keywords, pool: &SqlitePool) -> Markup {
         return html! {};
     }
 
-    if let Ok(mut matches) = get_locators_by_keywords(keywords, pool, 10).await {
+    if let Ok(matches) = get_locators_by_keywords(keywords, pool).await {
         if matches.len() == 0 {
             html! {
                 p { "No matches" }
             }
         } else {
-            sort_matches(&mut matches, keywords);
             html! {
                 ol {
                     @for m in matches {
