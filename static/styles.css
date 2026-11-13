@@ -146,3 +146,7 @@ dialog#loading {
 	from { color:#fff; }
 	to   { color:#ccc; }
 }
+
+:focus {
+    outline:none;
+}
