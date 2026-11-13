@@ -182,7 +182,7 @@ async fn get_locators_by_keywords(
             from locator l
             join locator_keyword j on l.id = j.locator_id
             join keyword k on k.id = j.keyword_id
-            where k.content like 
+            where k.content like
             "#,
         );
         query.push_bind(format!("{keyword}%"));
