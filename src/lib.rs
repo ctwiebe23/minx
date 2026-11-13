@@ -298,7 +298,9 @@ pub async fn make_matches(keywords: &Keywords, pool: &SqlitePool) -> Markup {
             html! {
                 ol {
                     @for m in matches {
-                        li _={ "on click fetch '/' + encodeURIComponent('" (m.content) "') with method: 'PUT' then go to " (m.content) } {
+                        li _={ r#"on click
+                                    set dialog to #loading then dialog.showModal()
+                                    fetch '/' + encodeURIComponent('"# (m.content) "') with method: 'PUT' then go to " (m.content) } {
                             h2 { (m.content) }
                             div .visits { (m.visits) }
                             p { ({

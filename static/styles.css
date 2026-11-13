@@ -126,3 +126,23 @@ output#matches {
     }
   }
 }
+
+dialog#loading {
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    border:none;
+    background:none;
+    animation:loading 1s infinite alternate;
+    font-size:2rem;
+
+    &::backdrop {
+        background:rgba(0,0,0,0.4);
+    }
+}
+
+@keyframes loading {
+	from { color:#fff; }
+	to   { color:#ccc; }
+}

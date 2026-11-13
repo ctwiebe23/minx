@@ -38,6 +38,9 @@ fn layout_html(title: &str, body: Markup) -> Markup {
                 main {
                     (body)
                 }
+                dialog #loading closedby="none" {
+                    "loading..."
+                }
             }
         }
     }
@@ -72,6 +75,8 @@ fn index_body() -> Markup {
                     put "<h1>disconnected</h1>" into #status
                 end
                 on keydown[key is 'Enter']
+                    set dialog to #loading
+                    dialog.showModal()
                     set terms to encodeURIComponent(my value)
                     go to `/${terms}`
                 "#;
