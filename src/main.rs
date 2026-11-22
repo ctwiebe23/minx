@@ -53,10 +53,13 @@ fn index_body() -> Markup {
             socket Socket /ws
                 on message put message into #matches
             end
+            on status(message)
+                make an <h1/>
+                put the message into it then put it into #status
+            end
             on delete(locator)
                 set path to encodeURIComponent(locator)
-                fetch `/${path}` with method: 'DELETE'
-                put "<h1>" + the result + "</h1>" into #status
+                fetch `/${path}` with method: 'DELETE' then trigger status(message: the result)
                 send refresh to #terms
             end
             on keydown(key, ctrlKey)
@@ -72,7 +75,8 @@ fn index_body() -> Markup {
                 on input or refresh
                     send terms(terms: my value) to Socket
                 catch e
-                    put "<h1>disconnected</h1>" into #status
+                    trigger status(message: 'disconnected')
+                    clear #matches
                 end
                 on keydown[key is 'Enter']
                     set dialog to #loading
@@ -97,7 +101,7 @@ fn login_body() -> Markup {
                     set decade to encodeURIComponent(my value)
                     fetch `/login?decade=${decade}` then reload() the location of the window
                 catch e
-                    put "<h1>login failed</h1>" into #status
+                    trigger status(message: 'login failed')
                 "#;
     }
 }
